@@ -1,0 +1,10 @@
+# Data and outputs (keep large / unpublished files out of the repo)
+*.csv
+results/
+*.html
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
