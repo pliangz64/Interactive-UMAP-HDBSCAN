@@ -97,6 +97,19 @@ Written to the `--out` folder (default `results/`):
 
 Cluster `-1` means *unclustered*: HDBSCAN did not assign the genome to any cluster because it is in a sparse area. These genomes are shown in grey.
 
+## Using the map
+
+| Action | Effect |
+|---|---|
+| **Hover** over a point | Shows the genome ID, dataset, cluster and annotations |
+| **Click** a legend entry | Hides that group; click again to show it |
+| **Double-click** a legend entry | Shows *only* that group; double-click again to show everything |
+| **Drag** on the plot | Zooms into the selected area |
+| **Double-click** the plot background | Resets the zoom |
+| Toolbar (top right, on hover) | Pan, zoom, reset, and download the current view as a PNG |
+
+Legend entries are combinations of colour group and dataset (e.g. `3, VMGC`), so clicking one affects only that dataset's genomes in that group.
+
 ## Options
 
 | Option | Default | Meaning |
