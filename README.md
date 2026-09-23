@@ -1,6 +1,6 @@
 # Interactive UMAP + HDBSCAN maps for genome datasets
 
-> **Status: early prototype.** Interfaces and defaults may change.
+> **Status: early prototype.** Interfaces and defaults may change. The default UMAP/HDBSCAN settings were chosen using DNABERT-S embeddings of UHGG and VMGC genomes (about 5,500 genomes) and have not yet been validated on other data types or dataset sizes.
 
 Turn genome embeddings, or UMAP/HDBSCAN results you have already computed, plus any annotations you have into a single interactive map. The output is a standalone HTML file that opens in any browser and can be emailed to collaborators or attached as supplementary material.
 
@@ -26,6 +26,8 @@ Requires Python 3.9+.
 ```bash
 pip install -r requirements.txt
 ```
+
+To reproduce published maps exactly, install the pinned versions instead: `pip install -r requirements-lock.txt`. UMAP output can change slightly between package releases.
 
 ## Quick start (example data included)
 
@@ -53,7 +55,7 @@ GENOME_B,2.98,-0.87,0,Vaginal
 - `Cluster` and `Dataset` are optional. If named differently, use `--cluster-col` and `--dataset-col`.
 - Any other columns are treated as annotations.
 
-**Embeddings** (`--input LABEL file.csv`): one file per dataset. Every column after the ID is a numeric embedding dimension. All files must have the same number of dimensions.
+**Embeddings** (`--input LABEL file.csv`): one file per dataset. Every column after the ID is a numeric feature, such as an embedding dimension. All files must have the same number of columns. The default distance (`--metric euclidean`) suits dense embeddings like DNABERT-S. For other inputs, such as binary gene presence/absence matrices, choose a suitable metric (e.g. `--metric jaccard`).
 
 ```
 ,dim_0,dim_1,dim_2,...
@@ -112,6 +114,7 @@ Embedding input only:
 |---|---|---|
 | `--min-cluster-fraction` | `0.05` | Smallest cluster, as a fraction of all genomes. The default gives a coarse first-pass view (usually fewer than 10 clusters). Lower it (e.g. `0.017`) for finer sub-clusters. |
 | `--min-samples` | `5` | How strictly HDBSCAN requires dense regions. Values of 15 or more can merge most genomes into one or two clusters. |
+| `--metric` | `euclidean` | UMAP distance metric. `euclidean` or `cosine` for dense embeddings; `jaccard` for binary presence/absence data. Any [umap-learn metric](https://umap-learn.readthedocs.io/en/latest/parameters.html#metric) works. |
 | `--n-neighbors` | `30` | UMAP neighbourhood size. Larger values emphasise global structure. |
 | `--min-dist` | `0.1` | UMAP point spacing. |
 | `--seed` | `42` | Random seed for the main result. |
@@ -122,9 +125,11 @@ Run `python interactive_umap_hdbscan.py --help` for the full list.
 ## How the embedding workflow works
 
 1. **Combine** all embedding tables into one matrix, keeping track of which dataset each genome came from.
-2. **UMAP** projects the combined embeddings to 2-D (Euclidean distance).
+2. **UMAP** projects the combined embeddings to 2-D using the chosen distance metric (default Euclidean).
 3. **HDBSCAN** clusters the 2-D map, so every cluster matches what you see in the plot.
-4. **Stability check:** steps 2–3 are repeated with different random seeds. Agreement between runs is measured with the Adjusted Rand Index (1 = identical clusters).
+4. **Stability check:** steps 2–3 are repeated with different random seeds, and each pair of runs is compared with the Adjusted Rand Index (ARI; 1 = identical clusters). The ARI is computed only on genomes that were clustered in both runs, because counting shared "unclustered" labels as agreement would inflate the score. The report also states what share of genomes that comparison covered.
+
+   The report summarises the mean ARI in words using these cutoffs. They are **rule-of-thumb guides chosen for this tool, not an established standard**:
    - 0.9 or higher: consistent
    - 0.75 to 0.9: mostly consistent
    - below 0.75: varied; treat cluster assignments with caution
@@ -135,6 +140,7 @@ Run `python interactive_umap_hdbscan.py --help` for the full list.
 - A dataset with fewer genomes than the minimum cluster size cannot form a cluster of its own. It can only join other clusters or remain unclustered.
 - UMAP distances between far-apart groups are not meaningful. Treat the map as a view of local neighbourhoods, not as exact distances.
 - For precomputed input, clusters and coordinates are shown as provided; the tool does not check them.
+- The stability check compares clusters only among genomes clustered in both runs. If many genomes are unclustered, a high score describes only the clustered part of the data. Check the "share of genomes clustered in both runs" line in the report.
 
 ## Built with
 

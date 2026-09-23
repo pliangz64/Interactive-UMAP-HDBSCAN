@@ -73,6 +73,10 @@ def parse_args():
                           "for finer sub-clusters.")
     emb.add_argument("--min-samples", type=int, default=5,
                      help="HDBSCAN min_samples. Values >= 15 can collapse 2-D maps into 1-2 clusters.")
+    emb.add_argument("--metric", default="euclidean",
+                     help="UMAP distance metric for the embeddings, e.g. 'euclidean' or 'cosine' for "
+                          "dense embeddings, 'jaccard' for binary presence/absence matrices. Any "
+                          "metric supported by umap-learn works.")
     emb.add_argument("--n-neighbors", type=int, default=30, help="UMAP n_neighbors.")
     emb.add_argument("--min-dist", type=float, default=0.1, help="UMAP min_dist.")
     emb.add_argument("--seed", type=int, default=42, help="Random seed for the main result.")
@@ -161,7 +165,7 @@ def cluster(X, args, seed):
     import hdbscan
     import umap
     coords = umap.UMAP(n_neighbors=args.n_neighbors, min_dist=args.min_dist,
-                       metric='euclidean', random_state=seed).fit_transform(X)
+                       metric=args.metric, random_state=seed).fit_transform(X)
     labels = hdbscan.HDBSCAN(min_cluster_size=min_cluster_size(args, len(X)),
                              min_samples=args.min_samples).fit_predict(coords)
     return coords, labels
@@ -189,10 +193,16 @@ def stability_lines(X, args, primary_labels):
         if seed not in labelings:
             print(f"   stability run with seed {seed}...")
             labelings[seed] = cluster(X, args, seed)[1]
-    ari = [adjusted_rand_score(labelings[a], labelings[b])
-           for a, b in itertools.combinations(labelings, 2)]
+    # Compare only genomes clustered in both runs: counting shared noise (-1) as a
+    # "cluster" would inflate agreement
+    ari, shared = [], []
+    for a, b in itertools.combinations(labelings, 2):
+        both = (labelings[a] >= 0) & (labelings[b] >= 0)
+        shared.append(both.mean())
+        ari.append(adjusted_rand_score(labelings[a][both], labelings[b][both]) if both.sum() > 1 else 0.0)
     counts = [n_clusters(l) for l in labelings.values()]
     mean_ari = np.mean(ari)
+    # Rule-of-thumb cutoffs chosen for this tool, not an established standard
     if mean_ari >= 0.9:
         verdict = "Clusters were consistent across random runs."
     elif mean_ari >= 0.75:
@@ -201,7 +211,10 @@ def stability_lines(X, args, primary_labels):
         verdict = "Clusters varied between random runs; treat cluster assignments with caution."
     lines.append(f"Stability: {verdict}")
     lines.append(f"  {len(labelings)} runs gave {min(counts)}-{max(counts)} clusters; "
-                 f"agreement (Adjusted Rand Index) mean {mean_ari:.2f}, lowest {np.min(ari):.2f}")
+                 f"agreement (Adjusted Rand Index, genomes clustered in both runs) "
+                 f"mean {mean_ari:.2f}, lowest {np.min(ari):.2f}")
+    lines.append(f"  On average {np.mean(shared):.0%} of genomes were clustered in both runs of a pair.")
+    lines.append("  Verdict cutoffs (0.9 / 0.75) are rule-of-thumb guides chosen for this tool.")
     return lines
 
 
@@ -360,7 +373,8 @@ def main():
         df['Cluster'] = cluster_labels
         df['Dataset'] = datasets.values
         report += stability_lines(X, args, cluster_labels)
-        subtitle = (f"{len(df)} genomes; UMAP n_neighbors={args.n_neighbors}, min_dist={args.min_dist}; "
+        subtitle = (f"{len(df)} genomes; UMAP metric={args.metric}, n_neighbors={args.n_neighbors}, "
+                    f"min_dist={args.min_dist}; "
                     f"HDBSCAN min_cluster_size={min_cluster_size(args, len(df))}, "
                     f"min_samples={args.min_samples}")
     else:

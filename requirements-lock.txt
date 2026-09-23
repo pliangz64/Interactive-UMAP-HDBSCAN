@@ -1,0 +1,17 @@
+# Exact versions used to develop and test this tool (Python 3.14.2, Windows 11).
+# UMAP output can change between releases; install these to reproduce published maps:
+#   pip install -r requirements-lock.txt
+# For everyday use, requirements.txt (minimum versions) is enough.
+hdbscan==0.8.44
+joblib==1.5.3
+llvmlite==0.47.0
+narwhals==2.22.1
+numba==0.65.1
+numpy==2.4.6
+pandas==3.0.3
+plotly==6.8.0
+pynndescent==0.6.0
+scikit-learn==1.9.0
+scipy==1.18.0
+threadpoolctl==3.6.0
+umap-learn==0.5.12
