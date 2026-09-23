@@ -1,5 +1,22 @@
 # Interactive UMAP + HDBSCAN maps for genome datasets
 
+## How the embedding workflow works
+
+1. **Combine** all embedding tables into one matrix, keeping track of which dataset each genome came from.
+2. **UMAP** projects the combined embeddings to 2-D using the chosen distance metric (default Euclidean).
+3. **HDBSCAN** clusters the 2-D map, so every cluster matches what you see in the plot.
+4. **Stability check:** steps 2–3 are repeated with different random seeds, and each pair of runs is compared with the Adjusted Rand Index (ARI; 1 = identical clusters). The ARI is computed only on genomes that were clustered in both runs, because counting shared "unclustered" labels as agreement would inflate the score. The report also states what share of genomes that comparison covered.
+
+   The report summarises the mean ARI in words using these cutoffs. They are **rule-of-thumb guides chosen for this tool, not an established standard**:
+   - 0.9 or higher: consistent
+   - 0.75 to 0.9: mostly consistent
+   - below 0.75: varied; treat cluster assignments with caution
+5. **Interactive map:** the result is written to a standalone HTML file, with any annotations you supply.
+
+If you already have 2-D coordinates and clusters, the tool skips steps 1–4 and only builds the map (see [Two ways to use it](#two-ways-to-use-it)).
+
+## Overview
+
 Turn genome embeddings, or UMAP/HDBSCAN results you have already computed, plus any annotations you have into a single interactive map. The output is a standalone HTML file that opens in any browser and can be emailed to collaborators or attached as supplementary material.
 
 - **Hover** over a genome to see its ID, dataset, cluster and all of your annotations.
@@ -134,18 +151,6 @@ Embedding input only:
 | `--stability-runs` | `5` | Number of seeds used for the stability check (`0` to skip; faster). |
 
 Run `python interactive_umap_hdbscan.py --help` for the full list.
-
-## How the embedding workflow works
-
-1. **Combine** all embedding tables into one matrix, keeping track of which dataset each genome came from.
-2. **UMAP** projects the combined embeddings to 2-D using the chosen distance metric (default Euclidean).
-3. **HDBSCAN** clusters the 2-D map, so every cluster matches what you see in the plot.
-4. **Stability check:** steps 2–3 are repeated with different random seeds, and each pair of runs is compared with the Adjusted Rand Index (ARI; 1 = identical clusters). The ARI is computed only on genomes that were clustered in both runs, because counting shared "unclustered" labels as agreement would inflate the score. The report also states what share of genomes that comparison covered.
-
-   The report summarises the mean ARI in words using these cutoffs. They are **rule-of-thumb guides chosen for this tool, not an established standard**:
-   - 0.9 or higher: consistent
-   - 0.75 to 0.9: mostly consistent
-   - below 0.75: varied; treat cluster assignments with caution
 
 ## Limitations
 
