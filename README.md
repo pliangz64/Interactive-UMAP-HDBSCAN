@@ -1,7 +1,5 @@
 # Interactive UMAP + HDBSCAN maps for genome datasets
 
-> **Status: early prototype.** Interfaces and defaults may change. The default UMAP/HDBSCAN settings were chosen using DNABERT-S embeddings of UHGG and VMGC genomes (about 5,500 genomes) and have not yet been validated on other data types or dataset sizes.
-
 Turn genome embeddings, or UMAP/HDBSCAN results you have already computed, plus any annotations you have into a single interactive map. The output is a standalone HTML file that opens in any browser and can be emailed to collaborators or attached as supplementary material.
 
 - **Hover** over a genome to see its ID, dataset, cluster and all of your annotations.
@@ -9,6 +7,8 @@ Turn genome embeddings, or UMAP/HDBSCAN results you have already computed, plus 
 - **Click legend entries** to show or hide clusters and datasets.
 - **Smaller datasets stay visible.** Any dataset making up less than 40% of all genomes is drawn on top of the larger ones with a thin black outline, so it doesn't get hidden.
 - **Bring your own analysis.** The tool doesn't need to know what your annotations mean. It displays whatever columns you give it.
+
+> **Status: early prototype.** Interfaces and defaults may change. The default UMAP/HDBSCAN settings were chosen using DNABERT-S embeddings of UHGG and VMGC genomes (about 5,500 genomes) and have not yet been validated on other data types or dataset sizes.
 
 ## Two ways to use it
 
