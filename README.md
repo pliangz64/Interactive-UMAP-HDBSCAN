@@ -1,5 +1,7 @@
 # Interactive UMAP + HDBSCAN maps for genome datasets
+
 ![Interactive UMAP Demonstration](Interactive%20UMAP%20-%20HDBSCAN%20Demonstration.gif)
+
 ## How the embedding workflow works
 
 1. **Combine** all embedding tables into one matrix, keeping track of which dataset each genome came from.
