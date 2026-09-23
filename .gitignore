@@ -1,5 +1,6 @@
 # Data and outputs (keep large / unpublished files out of the repo)
 *.csv
+!examples/*.csv
 results/
 *.html
 
